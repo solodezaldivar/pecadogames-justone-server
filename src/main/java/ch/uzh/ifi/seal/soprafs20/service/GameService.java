@@ -269,7 +269,7 @@ public class GameService {
      * @param player     the player.
      * @param cluePutDTO the clue to send.
      */
-    private void sendClueSpecial(Game game, Player player, CluePutDTO cluePutDTO) {
+    private void sendClueSpecial(final Game game, Player player, CluePutDTO cluePutDTO) {
         Clue firstClue = new Clue();
         firstClue.setPlayerId(player.getId());
         firstClue.setActualClue(cluePutDTO.getMessage());
