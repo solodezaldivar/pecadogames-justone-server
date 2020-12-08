@@ -187,17 +187,13 @@ public class GameService {
         GameState gameState = game.getGameState();
         if (gameState.equals(GameState.END_GAME_STATE)) {
             return END_TIME;
-        }
-        else if (gameState.equals(GameState.PICK_WORD_STATE)) {
+        } else if (gameState.equals(GameState.PICK_WORD_STATE)) {
             return PICK_WORD_TIME;
-        }
-        else if (gameState.equals(GameState.TRANSITION_STATE)) {
+        } else if (gameState.equals(GameState.TRANSITION_STATE)) {
             return TRANSITION_TIME;
-        }
-        else if (gameState.equals(GameState.ENTER_CLUES_STATE)) {
+        } else if (gameState.equals(GameState.ENTER_CLUES_STATE)) {
             return ENTER_CLUES_TIME;
-        }
-        else if (gameState.equals(GameState.VOTE_ON_CLUES_STATE)) {
+        } else if (gameState.equals(GameState.VOTE_ON_CLUES_STATE)) {
             return VOTE_TIME;
         }
         return GUESS_TIME;
@@ -298,8 +294,7 @@ public class GameService {
             addClue(clue, game);
             clueRepository.saveAndFlush(clue);
             gameRepository.saveAndFlush(game);
-        }
-        else {
+        } else {
             sendClueSpecial(game, player, cluePutDTO);
         }
         int counter = 0;
@@ -395,8 +390,7 @@ public class GameService {
         if (cluePutDTO.getMessage2() != null) {
             secondClue.setActualClue(cluePutDTO.getMessage2());
             player.addClue(secondClue);
-        }
-        else {
+        } else {
             secondClue.setActualClue("");
         }
         addClue(firstClue, game);
@@ -456,8 +450,7 @@ public class GameService {
             }
             game.setOverallScore(game.getOverallScore() + score);
             game.getCurrentGuesser().setScore(pastScore + score);
-        }
-        else {
+        } else {
             score = -invalidGuessDeduction;
             //In case of special game (only three players), double the deduction
             if (game.isSpecialGame()) {
@@ -588,13 +581,11 @@ public class GameService {
                     if (game.isSpecialGame() && game.isGuessCorrect()) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
                                 * ((game.getPlayers().size() * 2 - submittedClues)));
-                    }
-                    else {
+                    } else {
                         if (game.isGuessCorrect()) {
-                            newScore = (int) (player.getClue(i).getTimeNeeded() *
-                                    ((game.getPlayers().size() * 2 - submittedClues)));
-                        }
-                        else {
+                            newScore = (int) (player.getClue(i).getTimeNeeded()
+                                    * ((game.getPlayers().size() * 2 - submittedClues)));
+                        } else {
                             newScore = -INCORRECT_GUESS_DEDUCTION * 2;
                         }
                     }
@@ -602,8 +593,7 @@ public class GameService {
                     if (player.getScore() <= 0) {
                         game.setOverallScore(
                                 Math.max(game.getOverallScore() - player.getScore(), 0));
-                    }
-                    else {
+                    } else {
                         game.setOverallScore(
                                 Math.max(game.getOverallScore() + newScore, 0));
                     }
@@ -875,8 +865,7 @@ public class GameService {
         Optional<Lobby> foundLobby = lobbyRepository.findByLobbyId(game.getLobbyId());
         if (foundLobby.isPresent()) {
             lobby = foundLobby.get();
-        }
-        else {
+        } else {
             return;
         }
         String uri;
@@ -885,19 +874,17 @@ public class GameService {
         if (split.length == 1) {
             uri = String.format("https://api.datamuse.com/words?ml=%s",
                     split[0]);
-        }
-        else if (split.length == 2) {
+        } else if (split.length == 2) {
             uri = String.format("https://api.datamuse.com/words?ml=%s+%s",
                     split[0], split[1]);
-        }
-        else {
+        } else {
             return;
         }
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(uri, String.class);
         // in the case of a game with 3 players, a bot submits two clues instead of one
-        int amountOfClues = (game.isSpecialGame() ?
-                lobby.getCurrentNumBots() * 2 : lobby.getCurrentNumBots());
+        int amountOfClues = (game.isSpecialGame()
+                ? lobby.getCurrentNumBots() * 2 : lobby.getCurrentNumBots());
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             List<APIResponse> response = objectMapper
@@ -920,8 +907,7 @@ public class GameService {
                     }
                 }
             }
-        }
-        catch (JsonProcessingException ex) {
+        } catch (JsonProcessingException ex) {
             ex.getMessage();
         }
     }
@@ -940,8 +926,7 @@ public class GameService {
         if (player.isVoted()) {
             throw new UnauthorizedException(
                     "This player already sent his votes!");
-        }
-        else {
+        } else {
             for (String s : invalidWords) {
                 Clue clue = new Clue();
                 clue.setPlayerId(player.getId());
@@ -952,8 +937,9 @@ public class GameService {
         }
         int counter = 0;
         for (Player p : game.getPlayers()) {
-            if (p.isVoted())
+            if (p.isVoted()) {
                 counter++;
+            }
         }
         if (counter == game.getPlayers().size() - 1) {
             int ceil = (int) Math.ceil(
@@ -1036,8 +1022,7 @@ public class GameService {
             if (!game.getInvalidClues().contains(clue)) {
                 game.addInvalidClue(clue);
             }
-        }
-        else if (!game.getInvalidClues().contains(clue)) {
+        } else if (!game.getInvalidClues().contains(clue)) {
             // Only add the clue to list of entered clues
             // if the same clue wasn't sent before
             game.addClue(clue);
