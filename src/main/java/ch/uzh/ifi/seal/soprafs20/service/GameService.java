@@ -171,14 +171,11 @@ public class GameService {
      * @return the game by id.
      */
     public Game getGame(final Long id) {
-        Game game;
         Optional<Game> optionalGame = gameRepository.findById(id);
-        if (optionalGame.isPresent()) {
-            game = optionalGame.get();
-            return game;
-        } else {
+        if (!optionalGame.isPresent()) {
             throw new NotFoundException("Could not find game!");
         }
+        return optionalGame.get();
     }
 
     /**
@@ -230,9 +227,7 @@ public class GameService {
         newGame.setLobbyName(lobby.getLobbyName());
         newGame.setRounds(lobby.getRounds());
 
-        for (Player player : lobby.getPlayersInLobby()) {
-            newGame.addPlayer(player);
-        }
+        newGame.getPlayers().addAll(lobby.getPlayersInLobby());
 
         // if there are only 3 players, the special rule set has to be applied
         int players = lobby.getCurrentNumBots()
@@ -301,13 +296,13 @@ public class GameService {
         } else {
             sendClueSpecial(game, player, cluePutDTO);
         }
-        int counter = 0;
+        int sentClue = 0;
         for (Player playerInGame : game.getPlayers()) {
             if (playerInGame.isClueIsSent()) {
-                counter++;
+                sentClue++;
             }
         }
-        if (allSent(game, counter)) {
+        if (allSent(game, sentClue)) {
             generateCluesForBots(game);
             checkClues(game);
             gameRepository.saveAndFlush(game);
@@ -442,7 +437,8 @@ public class GameService {
     private void guesserScore(final Game game, final long time) {
         final int timeFactor = 5;
         final int invalidGuessDeduction = -30;
-        int pastScore = game.getCurrentGuesser().getScore();
+        Player currentGuesser = game.getCurrentGuesser();
+        int pastScore = currentGuesser.getScore();
         int score = 0;
 
         if (game.isGuessCorrect()) {
@@ -453,7 +449,7 @@ public class GameService {
                 score = score * 2;
             }
             game.setOverallScore(game.getOverallScore() + score);
-            game.getCurrentGuesser().setScore(pastScore + score);
+            currentGuesser.setScore(pastScore + score);
         } else {
             score = -invalidGuessDeduction;
             //In case of special game (only three players), double the deduction
@@ -461,9 +457,9 @@ public class GameService {
                 score = score * 2;
             }
             //score
-            game.getCurrentGuesser()
+            currentGuesser
                     .setScore(Math.max(pastScore + score, 0));
-            if (game.getCurrentGuesser().getScore() <= 0) {
+            if (currentGuesser.getScore() <= 0) {
                 game.setOverallScore(
                         Math.max(game.getOverallScore() - pastScore, 0));
             } else {
@@ -573,23 +569,25 @@ public class GameService {
             // otherwise 1 (or 0, if player did not send any clues)
             for (int i = 0; i < player.getClues().size(); i++) {
                 if (game.getEnteredClues().contains(player.getClue(i))) {
+                    boolean isGuessCorrect = game.isGuessCorrect();
+                    boolean isSpecialGame = game.isSpecialGame();
                     int newScore = 0;
-                    if (!game.isSpecialGame() && game.isGuessCorrect()) {
+                    if (!isSpecialGame  && isGuessCorrect) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
                                 * ((game.getPlayers().size()
                                 - submittedClues)));
                     }
-                    if (!game.isSpecialGame()
-                            && !game.isGuessCorrect()) {
+                    if (!isSpecialGame
+                            && !isGuessCorrect) {
                         newScore = INCORRECT_GUESS_DEDUCTION;
                     }
 
-                    if (game.isSpecialGame() && game.isGuessCorrect()) {
+                    if (isSpecialGame  && isGuessCorrect) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
                                 * ((game.getPlayers().size() * 2
                                 - submittedClues)));
                     } else {
-                        if (game.isGuessCorrect()) {
+                        if (isGuessCorrect) {
                             newScore =
                                     (int) (player.getClue(i).getTimeNeeded()
                                     * ((game.getPlayers().size() * 2
@@ -880,11 +878,10 @@ public class GameService {
         Lobby lobby;
         Optional<Lobby> foundLobby = lobbyRepository
                 .findByLobbyId(game.getLobbyId());
-        if (foundLobby.isPresent()) {
-            lobby = foundLobby.get();
-        } else {
+        if (foundLobby.isEmpty()) {
             return;
         }
+        lobby = foundLobby.get();
         String uri;
         // the api call is a bit different
         // if the current word consists of two separate words
@@ -950,15 +947,14 @@ public class GameService {
         if (player.isVoted()) {
             throw new UnauthorizedException(
                     "This player already sent his votes!");
-        } else {
-            for (String s : invalidWords) {
-                Clue clue = new Clue();
-                clue.setPlayerId(player.getId());
-                clue.setActualClue(s);
-                game.addInvalidClue(clue);
-            }
-            player.setVoted(true);
         }
+        for (String s : invalidWords) {
+            Clue clue = new Clue();
+            clue.setPlayerId(player.getId());
+            clue.setActualClue(s);
+            game.addInvalidClue(clue);
+        }
+        player.setVoted(true);
         int counter = 0;
         for (Player p : game.getPlayers()) {
             if (p.isVoted()) {
