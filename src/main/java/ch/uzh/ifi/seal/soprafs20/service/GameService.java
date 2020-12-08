@@ -816,7 +816,8 @@ public class GameService {
                 counter++;
         }
         if (counter == game.getPlayers().size() - 1) {
-            int ceil = (int) Math.ceil(((float) game.getPlayers().size() - 1) / 2);
+            int ceil = (int) Math.ceil(
+                    ((float) game.getPlayers().size() - 1) / 2);
             checkVotes(game, ceil);
             game.getTimer().setCancel(true);
             gameRepository.saveAndFlush(game);
@@ -829,13 +830,14 @@ public class GameService {
      *
      * @param game the game.
      */
-    public void vote(Game game) {
+    public void vote(final Game game) {
         for (Player p : game.getPlayers()) {
             if (!game.getCurrentGuesser().equals(p) && !p.isVoted()) {
                 p.setVoted(true);
             }
         }
-        checkVotes(game, (int) Math.ceil(((float) game.getPlayers().size() - 1) / 2));
+        checkVotes(game, (int) Math.ceil(
+                ((float) game.getPlayers().size() - 1) / 2));
         gameRepository.saveAndFlush(game);
     }
 
@@ -845,8 +847,9 @@ public class GameService {
      * @param game      the game.
      * @param threshold the threshold of maximal votes allowed.
      */
-    public void checkVotes(Game game, int threshold) {
-        // If there is only one real player and the rest are bots, voting is not necessary since bots can not vote
+    public void checkVotes(final Game game, final int threshold) {
+        // If there is only one real player and the rest are bots,
+        // voting is not necessary since bots can not vote
         if (game.getPlayers().size() < 2) {
             return;
         }
@@ -854,7 +857,8 @@ public class GameService {
         Iterator<Clue> iterator = game.getEnteredClues().iterator();
         while (iterator.hasNext()) {
             Clue clue = iterator.next();
-            int occurrences = Collections.frequency(game.getInvalidClues(), clue);
+            int occurrences =
+                    Collections.frequency(game.getInvalidClues(), clue);
             if (occurrences >= threshold) {
                 iterator.remove();
                 if (!actualInvalidClues.contains(clue)) {
@@ -866,7 +870,8 @@ public class GameService {
         iterator = game.getInvalidClues().iterator();
         while (iterator.hasNext()) {
             Clue invalidClue = iterator.next();
-            if (invalidClue.getPlayerId().equals(-1L) || invalidClue.getPlayerId().equals(0L)) {
+            if (invalidClue.getPlayerId().equals(-1L)
+                    || invalidClue.getPlayerId().equals(0L)) {
                 if (!actualInvalidClues.contains(invalidClue)) {
                     actualInvalidClues.add(invalidClue);
                 }
@@ -883,7 +888,7 @@ public class GameService {
      * @param clue the clue.
      * @param game the game.
      */
-    public void addClue(Clue clue, Game game) {
+    public void addClue(final Clue clue, final Game game) {
         // If the same clue is sent twice, remove it from list of entered clues
         if (game.getEnteredClues().contains(clue)) {
             game.getEnteredClues().remove(clue);
@@ -892,7 +897,8 @@ public class GameService {
                 game.addInvalidClue(clue);
             }
         }
-        // Only add the clue to list of entered clues if the same clue wasn't sent before
+        // Only add the clue to list of entered clues
+        // if the same clue wasn't sent before
         else if (!game.getInvalidClues().contains(clue)) {
             game.addClue(clue);
         }
