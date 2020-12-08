@@ -576,7 +576,8 @@ public class GameService {
                     int newScore = 0;
                     if (!game.isSpecialGame() && game.isGuessCorrect()) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
-                                * ((game.getPlayers().size() - submittedClues)));
+                                * ((game.getPlayers().size()
+                                - submittedClues)));
                     }
                     if (!game.isSpecialGame()
                             && !game.isGuessCorrect()) {
@@ -585,24 +586,27 @@ public class GameService {
 
                     if (game.isSpecialGame() && game.isGuessCorrect()) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
-                                * ((game.getPlayers().size() * 2 - submittedClues)));
+                                * ((game.getPlayers().size() * 2
+                                - submittedClues)));
                     } else {
                         if (game.isGuessCorrect()) {
                             newScore =
                                     (int) (player.getClue(i).getTimeNeeded()
-                                    * ((game.getPlayers().size() * 2 - submittedClues)));
-                        }
-                        else {
+                                    * ((game.getPlayers().size() * 2
+                                            - submittedClues)));
+                        } else {
                             newScore = -INCORRECT_GUESS_DEDUCTION * 2;
                         }
                     }
                     player.setScore(Math.max(player.getScore() + newScore, 0));
                     if (player.getScore() <= 0) {
                         game.setOverallScore(
-                                Math.max(game.getOverallScore() - player.getScore(), 0));
+                                Math.max(game.getOverallScore()
+                                        - player.getScore(), 0));
                     } else {
                         game.setOverallScore(
-                                Math.max(game.getOverallScore() + newScore, 0));
+                                Math.max(game.getOverallScore()
+                                        + newScore, 0));
                     }
                 }
             }
@@ -616,7 +620,8 @@ public class GameService {
      */
     void updateUserDatabase(final Game game) {
         for (Player player : game.getPlayers()) {
-            Optional<User> optionalUser = userRepository.findById(player.getId());
+            Optional<User> optionalUser = userRepository
+                    .findById(player.getId());
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
                 user.setScore(user.getScore() + player.getScore());
@@ -899,8 +904,8 @@ public class GameService {
         String result = restTemplate.getForObject(uri, String.class);
         // in the case of a game with 3 players,
         // a bot submits two clues instead of one
-        int amountOfClues = (game.isSpecialGame() ?
-                lobby.getCurrentNumBots() * 2
+        int amountOfClues = (game.isSpecialGame()
+                ? lobby.getCurrentNumBots() * 2
                 : lobby.getCurrentNumBots());
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -939,7 +944,9 @@ public class GameService {
      * @param invalidWords a list of invalid words.
      * @return whether all votes were successful.
      */
-    public boolean vote(final Game game, final Player player, final List<String> invalidWords) {
+    public boolean vote(final Game game,
+                        final Player player,
+                        final List<String> invalidWords) {
         if (player.isVoted()) {
             throw new UnauthorizedException(
                     "This player already sent his votes!");
