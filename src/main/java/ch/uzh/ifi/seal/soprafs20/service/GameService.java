@@ -835,7 +835,7 @@ public class GameService {
      * @param game the game.
      * @return the next state that the game will enter.
      */
-    public GameState getNextState(Game game) {
+    public GameState getNextState(final Game game) {
         GameState nextGameState;
         GameState currentGameState = game.getGameState();
         switch (currentGameState) {
