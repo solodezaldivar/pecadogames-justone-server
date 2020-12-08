@@ -42,48 +42,101 @@ import java.util.Random;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * Handles the game logic.
+ */
 @Service
 @Transactional
 public class GameService {
 
-    // the game repository.
+    /**
+     * The game repository
+     */
     private final GameRepository gameRepository;
-    // the lobby repository.
+
+    /**
+     * The lobby repository.
+     */
     private final LobbyRepository lobbyRepository;
-    // the user repository.
+
+    /**
+     * The user repository.
+     */
     private final UserRepository userRepository;
-    // the clue repository.
+
+    /**
+     * The clue repository.
+     */
     private final ClueRepository clueRepository;
-    // the lobby score repository.
+
+    /**
+     * The lobby score repository.
+     */
     private final LobbyScoreRepository lobbyScoreRepository;
-    // the player repository.
+
+    /**
+     * The player repository.
+     */
     private final PlayerRepository playerRepository;
 
-    // time to pick a word.
+    /**
+     * Time to pick a word.
+     */
     private static final int PICK_WORD_TIME = 10;
-    // time to enter a clue.
+
+    /**
+     * Time to enter a clue.
+     */
     private static final int ENTER_CLUES_TIME = 30;
-    // time to vote.
+
+    /**
+     * Time to vote.
+     */
     private static final int VOTE_TIME = 15;
-    // time to guess.
+
+    /**
+     * Time to guess.
+     */
     private static final int GUESS_TIME = 30;
-    // time for transition.
+
+    /**
+     * Time for transition.
+     */
     private static final int TRANSITION_TIME = 5;
-    // end time.
+
+    /**
+     * End time.
+     */
     private static final int END_TIME = 10;
-    // amount of players for special game rules.
+
+    /**
+     * Amount of players for special game rules.
+     */
     private static final int SPECIAL_GAME_AMOUNT_PLAYERS = 3;
-    // point deduction for incorrect guess.
+
+    /**
+     * Point deduction for incorrect guess.
+     */
     private static final int INCORRECT_GUESS_DEDUCTION = -15;
-    // amount of random words that are picked.
+
+    /**
+     * Amount of random words that are picked.
+     */
     private static final int RAND_WORDS = 13;
-    // random number.
+
+    /**
+     * A random number.
+     */
     private static final Random RAND = new Random();
-    // responsible to check clues.
+
+    /**
+     * Responsible for checking validity of clues.
+     */
     private static final NLP NLP = new NLP();
 
     /**
+     * Constructs an instance of this class.
+     *
      * @param gameRepository       repository of stored games
      * @param lobbyRepository      repository of stored lobbies
      * @param userRepository       repository of stored users
