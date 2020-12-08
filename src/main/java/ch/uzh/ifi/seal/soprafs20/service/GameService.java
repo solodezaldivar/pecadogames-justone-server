@@ -58,8 +58,8 @@ public class GameService {
     private static final int GUESS_TIME = 30;
     private static final int TRANSITION_TIME = 5;
     private static final int END_TIME = 10;
-    private final Random RAND = new Random();
-    private final NLP NLP = new NLP();
+    private static final Random RAND = new Random();
+    private static final NLP NLP = new NLP();
 
     /**
      *
@@ -71,9 +71,9 @@ public class GameService {
      * @param playerRepository repository of stored players
      */
     @Autowired
-    public GameService(GameRepository gameRepository, LobbyRepository lobbyRepository, UserRepository userRepository,
-                       LobbyScoreRepository lobbyScoreRepository, ClueRepository clueRepository,
-                       PlayerRepository playerRepository) {
+    public GameService(final GameRepository gameRepository, final LobbyRepository lobbyRepository,
+                       final UserRepository userRepository,  final LobbyScoreRepository lobbyScoreRepository,
+                       final ClueRepository clueRepository, final PlayerRepository playerRepository) {
         this.gameRepository = gameRepository;
         this.lobbyRepository = lobbyRepository;
         this.userRepository = userRepository;
@@ -88,14 +88,13 @@ public class GameService {
      * @param id the id of the game.
      * @return the game by id.
      */
-    public Game getGame(Long id) {
+    public Game getGame(final Long id) {
         Game game;
         Optional<Game> optionalGame = gameRepository.findById(id);
         if (optionalGame.isPresent()) {
             game = optionalGame.get();
             return game;
-        }
-        else {
+        } else {
             throw new NotFoundException("Could not find game!");
         }
     }
@@ -106,24 +105,19 @@ public class GameService {
      * @param game the game.
      * @return the maximal time in seconds.
      */
-    public int getMaxTime(Game game) {
+    public int getMaxTime(final Game game) {
         GameState gameState = game.getGameState();
         if (gameState.equals(GameState.END_GAME_STATE)) {
             return END_TIME;
-        }
-        else if (gameState.equals(GameState.PICK_WORD_STATE)) {
+        } else if (gameState.equals(GameState.PICK_WORD_STATE)) {
             return PICK_WORD_TIME;
-        }
-        else if (gameState.equals(GameState.TRANSITION_STATE)) {
+        } else if (gameState.equals(GameState.TRANSITION_STATE)) {
             return TRANSITION_TIME;
-        }
-        else if (gameState.equals(GameState.ENTER_CLUES_STATE)) {
+        } else if (gameState.equals(GameState.ENTER_CLUES_STATE)) {
             return ENTER_CLUES_TIME;
-        }
-        else if (gameState.equals(GameState.VOTE_ON_CLUES_STATE)) {
+        } else if (gameState.equals(GameState.VOTE_ON_CLUES_STATE)) {
             return VOTE_TIME;
-        }
-        return GUESS_TIME;
+        } return GUESS_TIME;
     }
 
     /**
@@ -451,14 +445,16 @@ public class GameService {
                 if (game.getEnteredClues().contains(player.getClue(i))) {
                     int newScore = 0;
                     if (!game.isSpecialGame() && game.isGuessCorrect()) {
-                        newScore = (int) (player.getClue(i).getTimeNeeded() * ((game.getPlayers().size() - counter)));
+                        newScore = (int) (player.getClue(i).getTimeNeeded()
+                                * ((game.getPlayers().size() - counter)));
                     }
                     if (!game.isSpecialGame() && !game.isGuessCorrect()) {
                         newScore = -15;
                     }
 
                     if (game.isSpecialGame() && game.isGuessCorrect()) {
-                        newScore = (int) (player.getClue(i).getTimeNeeded() * ((game.getPlayers().size() * 2 - counter)));
+                        newScore = (int) (player.getClue(i).getTimeNeeded()
+                                * ((game.getPlayers().size() * 2 - counter)));
                     }
 
                     if (game.isSpecialGame() && !game.isGuessCorrect()) {
@@ -467,8 +463,7 @@ public class GameService {
                     player.setScore(Math.max(player.getScore() + newScore, 0));
                     if (player.getScore() <= 0) {
                         game.setOverallScore(Math.max(game.getOverallScore() - player.getScore(), 0));
-                    }
-                    else {
+                    } else {
                         game.setOverallScore(Math.max(game.getOverallScore() + newScore, 0));
                     }
                 }
@@ -476,7 +471,7 @@ public class GameService {
         }
     }
 
-    void updateUserDatabase(Game game) {
+    void updateUserDatabase(final Game game) {
         for (Player player : game.getPlayers()) {
             Optional<User> optionalUser = userRepository.findById(player.getId());
             if (optionalUser.isPresent()) {
@@ -494,16 +489,18 @@ public class GameService {
      *
      * @param g - takes a game instance as input
      */
-    public void timer(Game g) {
+    public void timer(final Game g) {
         final Game[] game = {g};
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 game[0] = getUpdatedGame(game[0]);
-                game[0].setTime(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game[0].getStartTimeSeconds());
+                game[0].setTime(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+                        - game[0].getStartTimeSeconds());
 
                 // PickwordState
-                if (game[0].getTime() >= PICK_WORD_TIME && game[0].getRoundsPlayed() <= game[0].getRounds() && !getCancel(game[0]) && game[0].getGameState().equals(GameState.PICK_WORD_STATE)) {
+                if (game[0].getTime() >= PICK_WORD_TIME && game[0].getRoundsPlayed() <= game[0].getRounds()
+                        && !getCancel(game[0]) && game[0].getGameState().equals(GameState.PICK_WORD_STATE)) {
                     game[0].getTimer().cancel();
                     game[0].getTimer().purge();
                     pickWord(game[0]);
