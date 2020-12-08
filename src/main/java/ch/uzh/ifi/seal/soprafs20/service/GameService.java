@@ -1,5 +1,4 @@
 package ch.uzh.ifi.seal.soprafs20.service;
-
 import ch.uzh.ifi.seal.soprafs20.GameLogic.APIResponse;
 import ch.uzh.ifi.seal.soprafs20.GameLogic.NLP;
 import ch.uzh.ifi.seal.soprafs20.GameLogic.WordReader;
@@ -42,11 +41,7 @@ import java.util.Random;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Game Service
- * This class is the "worker" and responsible for all functionality related to the Game
- * The result will be passed back to the caller.
- */
+
 @Service
 @Transactional
 public class GameService {
@@ -66,6 +61,15 @@ public class GameService {
     private final Random RAND = new Random();
     private final NLP NLP = new NLP();
 
+    /**
+     *
+     * @param gameRepository repository of stored games
+     * @param lobbyRepository repository of stored lobbies
+     * @param userRepository repository of stored users
+     * @param lobbyScoreRepository repository of stored lobby scores
+     * @param clueRepository repository of stored clues
+     * @param playerRepository repository of stored players
+     */
     @Autowired
     public GameService(GameRepository gameRepository, LobbyRepository lobbyRepository, UserRepository userRepository,
                        LobbyScoreRepository lobbyScoreRepository, ClueRepository clueRepository,
