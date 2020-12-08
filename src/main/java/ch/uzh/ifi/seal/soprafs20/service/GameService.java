@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 public class GameService {
 
     /**
-     * The game repository
+     * The game repository.
      */
     private final GameRepository gameRepository;
 
@@ -108,6 +108,11 @@ public class GameService {
      * End time.
      */
     private static final int END_TIME = 10;
+
+    /**
+     * The timer schedule period.
+     */
+    private static final int SCHEDULE_PERIOD = 1000;
 
     /**
      * Amount of players for special game rules.
@@ -171,8 +176,7 @@ public class GameService {
         if (optionalGame.isPresent()) {
             game = optionalGame.get();
             return game;
-        }
-        else {
+        } else {
             throw new NotFoundException("Could not find game!");
         }
     }
@@ -581,7 +585,8 @@ public class GameService {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
                                 * ((game.getPlayers().size() - submittedClues)));
                     }
-                    if (!game.isSpecialGame() && !game.isGuessCorrect()) {
+                    if (!game.isSpecialGame()
+                            && !game.isGuessCorrect()) {
                         newScore = INCORRECT_GUESS_DEDUCTION;
                     }
 
@@ -591,7 +596,8 @@ public class GameService {
                     }
                     else {
                         if (game.isGuessCorrect()) {
-                            newScore = (int) (player.getClue(i).getTimeNeeded() *
+                            newScore =
+                                    (int) (player.getClue(i).getTimeNeeded() *
                                     ((game.getPlayers().size() * 2 - submittedClues)));
                         }
                         else {
@@ -782,7 +788,7 @@ public class GameService {
             }
         };
         if (game[0].getRoundsPlayed() <= game[0].getRounds()) {
-            game[0].getTimer().schedule(timerTask, 0, 1000);
+            game[0].getTimer().schedule(timerTask, 0, SCHEDULE_PERIOD);
         }
     }
 
@@ -793,7 +799,8 @@ public class GameService {
      * @return the lobby.
      */
     public Lobby getUpdatedLobby(final Long lobbyId) {
-        Optional<Lobby> currentLobby = lobbyRepository.findByLobbyId(lobbyId);
+        Optional<Lobby> currentLobby = lobbyRepository
+                .findByLobbyId(lobbyId);
         if (currentLobby.isPresent()) {
             return currentLobby.get();
         }
@@ -808,18 +815,21 @@ public class GameService {
      * @return whether the timer is cancelled.
      */
     public boolean getCancel(final Game game) {
-        Optional<Game> updated = gameRepository.findByLobbyId(game.getLobbyId());
-        return updated.map(value -> value.getTimer().isCancel()).orElse(false);
+        Optional<Game> updated = gameRepository
+                .findByLobbyId(game.getLobbyId());
+        return updated.map(value -> value.getTimer()
+                .isCancel()).orElse(false);
     }
 
     /**
-     * Gets the game from the {@code gameRepository} if it is updated.
+     * Gets the game from the {@code gameRepository}.
      *
      * @param game the game.
      * @return the game.
      */
     public Game getUpdatedGame(final Game game) {
-        Optional<Game> currentGame = gameRepository.findByLobbyId(game.getLobbyId());
+        Optional<Game> currentGame = gameRepository
+                .findByLobbyId(game.getLobbyId());
         return currentGame.orElse(game);
     }
 
@@ -872,7 +882,8 @@ public class GameService {
      */
     public void generateCluesForBots(final Game game) {
         Lobby lobby;
-        Optional<Lobby> foundLobby = lobbyRepository.findByLobbyId(game.getLobbyId());
+        Optional<Lobby> foundLobby = lobbyRepository
+                .findByLobbyId(game.getLobbyId());
         if (foundLobby.isPresent()) {
             lobby = foundLobby.get();
         }
@@ -880,14 +891,17 @@ public class GameService {
             return;
         }
         String uri;
-        // the api call is a bit different if the current word consists of two separate words
+        // the api call is a bit different
+        // if the current word consists of two separate words
         String[] split = game.getCurrentWord().split(" ");
         if (split.length == 1) {
-            uri = String.format("https://api.datamuse.com/words?ml=%s",
+            uri = String.format(
+                    "https://api.datamuse.com/words?ml=%s",
                     split[0]);
         }
         else if (split.length == 2) {
-            uri = String.format("https://api.datamuse.com/words?ml=%s+%s",
+            uri = String.format(
+                    "https://api.datamuse.com/words?ml=%s+%s",
                     split[0], split[1]);
         }
         else {
@@ -895,9 +909,11 @@ public class GameService {
         }
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(uri, String.class);
-        // in the case of a game with 3 players, a bot submits two clues instead of one
+        // in the case of a game with 3 players,
+        // a bot submits two clues instead of one
         int amountOfClues = (game.isSpecialGame() ?
-                lobby.getCurrentNumBots() * 2 : lobby.getCurrentNumBots());
+                lobby.getCurrentNumBots() * 2
+                : lobby.getCurrentNumBots());
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             List<APIResponse> response = objectMapper
