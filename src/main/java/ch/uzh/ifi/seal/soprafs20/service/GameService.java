@@ -1,4 +1,5 @@
 package ch.uzh.ifi.seal.soprafs20.service;
+
 import ch.uzh.ifi.seal.soprafs20.GameLogic.APIResponse;
 import ch.uzh.ifi.seal.soprafs20.GameLogic.NLP;
 import ch.uzh.ifi.seal.soprafs20.GameLogic.WordReader;
@@ -127,12 +128,14 @@ public class GameService {
     }
 
     /**
-     * Creates new {@code Game} instance and sets current guesser and chooses first word.
+     * Creates new {@code Game} instance, sets current guesser
+     * and chooses first word.
      *
      * @param lobby the {@code Lobby} for which the game is created.
+     * @param gamePostDTO the game post dto.
      * @return the created game.
      */
-    public Game createGame(Lobby lobby, GamePostDTO gamePostDTO) {
+    public Game createGame(final Lobby lobby, final GamePostDTO gamePostDTO) {
         if (!lobby.getHostToken().equals(gamePostDTO.getHostToken())) {
             throw new UnauthorizedException("You are not allowed to start the game.");
         }
@@ -154,15 +157,18 @@ public class GameService {
         }
 
         // if there are only 3 players, the special rule set has to be applied
-        newGame.setSpecialGame((lobby.getCurrentNumBots() + lobby.getCurrentNumPlayers()) == 3);
+        int players = lobby.getCurrentNumBots() + lobby.getCurrentNumPlayers();
+        newGame.setSpecialGame(players == 3);
 
         // assign first guesser
-        Player currentGuesser = newGame.getPlayers().get(RAND.nextInt(newGame.getPlayers().size()));
+        Player currentGuesser = newGame.getPlayers()
+                .get(RAND.nextInt(newGame.getPlayers().size()));
         newGame.setCurrentGuesser(currentGuesser);
 
         // set round count to 1
         newGame.setRoundsPlayed(1);
-        setStartTime(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()), newGame);
+        setStartTime(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
+                newGame);
 
         // select random words from words.txt
         WordReader reader = new WordReader();
@@ -181,23 +187,29 @@ public class GameService {
      * @param cluePutDTO the clue to be sent.
      * @return whether the clue was successfully sent.
      */
-    public boolean sendClue(Game game, Player player, CluePutDTO cluePutDTO) {
-        if (!game.getGameState().equals(GameState.ENTER_CLUES_STATE))
-            throw new UnauthorizedException("Clues are not accepted in current state!");
+    public boolean sendClue(final Game game, final Player player, final CluePutDTO cluePutDTO) {
+        if (!game.getGameState().equals(GameState.ENTER_CLUES_STATE)) {
+            throw new UnauthorizedException(
+                    "Clues are not accepted in current state!");
+        }
 
-        if (!game.getPlayers().contains(player) || player.isClueIsSent() || game.getCurrentGuesser().equals(player) ||
-                (!player.getToken().equals(cluePutDTO.getPlayerToken()))) {
-            throw new UnauthorizedException("This player is not allowed to send a clue!");
+        if (!game.getPlayers().contains(player)
+                || player.isClueIsSent()
+                || game.getCurrentGuesser().equals(player)
+                || (!player.getToken().equals(cluePutDTO.getPlayerToken()))) {
+            throw new UnauthorizedException(
+                    "This player is not allowed to send a clue!");
         }
 
         if (!game.isSpecialGame()) {
             Clue clue = new Clue();
             clue.setPlayerId(player.getId());
             clue.setActualClue(cluePutDTO.getMessage());
-            clue.setTimeNeeded(ENTER_CLUES_TIME - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
+            clue.setTimeNeeded(ENTER_CLUES_TIME -
+                    (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
             player.addClue(clue);
             player.setClueIsSent(true);
-            // if the same clue is sent twice, remove it from list of entered clues
+            // if the same clue is sent twice, it is removed once
             addClue(clue, game);
             clueRepository.saveAndFlush(clue);
             gameRepository.saveAndFlush(game);
@@ -222,11 +234,12 @@ public class GameService {
 
 
     /**
-     * Overloaded sendClue method for the case that the timer runs out and not every player sent a clue.
+     * Overloaded sendClue method for the case that the timer runs out
+     * and not every player sent a clue.
      *
      * @param game the game.
      */
-    public void sendClue(Game game) {
+    public void sendClue(final Game game) {
         // if a user did not send a clue, fill his clue with empty string
         for (Player p : game.getPlayers()) {
             if (!game.getCurrentGuesser().equals(p)) {
@@ -240,15 +253,16 @@ public class GameService {
     }
 
     /**
-     * Picks a word and
+     * Picks a word and enters the clue game state.
      *
      * @param token the token.
      * @param game  the game.
      * @return whether the word was saved successfully.
      */
-    public boolean pickWord(String token, Game game) {
+    public boolean pickWord(final String token, final Game game) {
         if (!game.getCurrentGuesser().getToken().equals(token)) {
-            throw new UnauthorizedException("This player is not allowed to pick a word!");
+            throw new UnauthorizedException(
+                    "This player is not allowed to pick a word!");
         }
         game.setCurrentWord(chooseWordAtRandom(game.getWords()));
         game.setGameState(GameState.ENTER_CLUES_STATE);
@@ -257,11 +271,12 @@ public class GameService {
     }
 
     /**
-     * Overloaded pickWord method for the case that the timer runs out and the guesser did not send a guess
+     * Overloaded pickWord method for the case that the timer runs out
+     * and the guesser did not send a guess.
      *
      * @param game the game.
      */
-    public void pickWord(Game game) {
+    public void pickWord(final Game game) {
         game.setCurrentWord(chooseWordAtRandom(game.getWords()));
     }
 
@@ -273,11 +288,14 @@ public class GameService {
      * @param player     the player.
      * @param cluePutDTO the clue to send.
      */
-    private void sendClueSpecial(final Game game, Player player, CluePutDTO cluePutDTO) {
+    private void sendClueSpecial(final Game game,
+                                 final Player player,
+                                 final CluePutDTO cluePutDTO) {
         Clue firstClue = new Clue();
         firstClue.setPlayerId(player.getId());
         firstClue.setActualClue(cluePutDTO.getMessage());
-        firstClue.setTimeNeeded(ENTER_CLUES_TIME - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
+        firstClue.setTimeNeeded(ENTER_CLUES_TIME -
+                (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
         player.addClue(firstClue);
 
         Clue secondClue = new Clue();
