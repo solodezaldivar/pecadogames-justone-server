@@ -118,7 +118,8 @@ public class GameService {
             return ENTER_CLUES_TIME;
         } else if (gameState.equals(GameState.VOTE_ON_CLUES_STATE)) {
             return VOTE_TIME;
-        } return GUESS_TIME;
+        }
+        return GUESS_TIME;
     }
 
     /**
@@ -199,16 +200,15 @@ public class GameService {
             Clue clue = new Clue();
             clue.setPlayerId(player.getId());
             clue.setActualClue(cluePutDTO.getMessage());
-            clue.setTimeNeeded(ENTER_CLUES_TIME -
-                    (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
+            clue.setTimeNeeded(ENTER_CLUES_TIME
+                    - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
             player.addClue(clue);
             player.setClueIsSent(true);
             // if the same clue is sent twice, it is removed once
             addClue(clue, game);
             clueRepository.saveAndFlush(clue);
             gameRepository.saveAndFlush(game);
-        }
-        else {
+        } else {
             sendClueSpecial(game, player, cluePutDTO);
         }
         int counter = 0;
@@ -288,18 +288,18 @@ public class GameService {
         Clue firstClue = new Clue();
         firstClue.setPlayerId(player.getId());
         firstClue.setActualClue(cluePutDTO.getMessage());
-        firstClue.setTimeNeeded(ENTER_CLUES_TIME -
-                (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
+        firstClue.setTimeNeeded(ENTER_CLUES_TIME
+                - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
         player.addClue(firstClue);
 
         Clue secondClue = new Clue();
         secondClue.setPlayerId(player.getId());
-        secondClue.setTimeNeeded(ENTER_CLUES_TIME - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - game.getStartTimeSeconds()));
+        secondClue.setTimeNeeded(ENTER_CLUES_TIME - (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+                - game.getStartTimeSeconds()));
         if (cluePutDTO.getMessage2() != null) {
             secondClue.setActualClue(cluePutDTO.getMessage2());
             player.addClue(secondClue);
-        }
-        else {
+        } else {
             secondClue.setActualClue("");
         }
         addClue(firstClue, game);
@@ -339,13 +339,13 @@ public class GameService {
     }
 
     private void guesserScore(final Game game, final long time) {
-        final int TimeFactor = 5;
-        final int InvalidGuessDeduction = -30;
+        final int timeFactor = 5;
+        final int invalidGuessDeduction = -30;
         int pastScore = game.getCurrentGuesser().getScore();
         int score = 0;
 
         if (game.isGuessCorrect()) {
-            score = (int) ((GUESS_TIME - time) * TimeFactor);
+            score = (int) ((GUESS_TIME - time) * timeFactor);
 
             //In case of special game (only three players), double the reward
             if (game.isSpecialGame()) {
@@ -353,9 +353,8 @@ public class GameService {
             }
             game.setOverallScore(game.getOverallScore() + score);
             game.getCurrentGuesser().setScore(pastScore + score);
-        }
-        else {
-            score = -InvalidGuessDeduction;
+        } else {
+            score = -invalidGuessDeduction;
             //In case of special game (only three players), double the deduction
             if (game.isSpecialGame()) {
                 score = score * 2;
@@ -364,8 +363,7 @@ public class GameService {
             game.getCurrentGuesser().setScore(Math.max(pastScore + score, 0));
             if (game.getCurrentGuesser().getScore() <= 0) {
                 game.setOverallScore(Math.max(game.getOverallScore() - pastScore, 0));
-            }
-            else {
+            } else {
                 game.setOverallScore(Math.max(game.getOverallScore() + score, 0));
             }
         }
@@ -419,6 +417,8 @@ public class GameService {
      * Checks whether all clues or votes have been sent.
      *
      * @return whether all clues/votes of each player are received.
+     * @param game the game.
+     * @param counter players
      */
     public boolean allSent(final Game game, final int counter) {
         return counter == game.getPlayers().size() - 1;
@@ -454,7 +454,7 @@ public class GameService {
      * @param game the game.
      */
     public void updateScores(Game game) {
-        final int IncorrectGuessDeduction = -15;
+        final int incorrectGuessDeduction = -15;
         game = getUpdatedGame(game);
         int submittedClues = 0;
         for (Clue clue : game.getEnteredClues()) {
@@ -478,14 +478,13 @@ public class GameService {
                     if (game.isSpecialGame() && game.isGuessCorrect()) {
                         newScore = (int) (player.getClue(i).getTimeNeeded()
                                 * ((game.getPlayers().size() * 2 - submittedClues)));
-                    }
-                    else {
+                    } else {
                         if (game.isGuessCorrect()) {
                             newScore = (int) (player.getClue(i).getTimeNeeded() *
                                     ((game.getPlayers().size() * 2 - submittedClues)));
                         }
                         else {
-                            newScore = -IncorrectGuessDeduction * 2;
+                            newScore = -incorrectGuessDeduction * 2;
                         }
                     }
                     player.setScore(Math.max(player.getScore() + newScore, 0));
